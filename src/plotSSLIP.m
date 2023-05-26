@@ -100,13 +100,13 @@ if ~opt.plotSingle % in this case, all activities are plotted in one figure (usi
     elseif isfield(opt,'maxE')
         caxisMinMax(1) = -opt.maxE;
     else
-        caxisMinMax(1) = min(slipIDcor(~isinf(slipIDcor)),[],'all','omitnan');
+        caxisMinMax(1) = min(slipIDcor(~isinf(slipIDcor)),[],'omitnan');
     end
 
     if isfield(opt,'maxE')
         caxisMinMax(2) = opt.maxE;
     else
-        caxisMinMax(2) = max(slipIDcor(~isinf(slipIDcor)),[],'all','omitnan');
+        caxisMinMax(2) = max(slipIDcor(~isinf(slipIDcor)),[],'omitnan');
     end
 
     % loop over all axes to adjust color scale and if needed logaritmic
