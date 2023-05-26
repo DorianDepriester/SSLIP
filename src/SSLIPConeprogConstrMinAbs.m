@@ -43,8 +43,8 @@ Hslip22 = reshape( Hslip(2,2,:) , 1, []);
 % put the theoretical components in matrix form for A*x = B type solving  
 % (rows: different components, columns: different slip systems)
 A = [Hslip11
-    Hslip12
     Hslip21
+    Hslip12
     Hslip22];
 
 % if necessary, normalize inplane
@@ -61,7 +61,7 @@ HExp(2,1,:) = Hyx(:);
 HExp(2,2,:) = Hyy(:);
 
 % set options for coneprog
-coneprogoptions = optimoptions('coneprog','Display','none');
+fminconoption = optimoptions('fmincon','Display','none');
 
 % initialize some variables
 
@@ -86,12 +86,12 @@ WaitMessage = parfor_wait(numAnalysis,'ReportInterval',ceil(numAnalysis/20));
 %%% loop over all points
 
 parfor i=1:length(Hxx(:))
-% for i=1:length(Hxx(:))
+%for i=1:length(Hxx(:))
+    HExpi = HExp(:,:,i);
+    HExpi = HExpi(:);
 
-    % do some checks to see if ID needs to be performed
-    
     % skip NaNs
-    if any(isnan(HExp(:,:,i)),'all')
+    if any(isnan(HExpi))
         gamma(:,i) = NaN;
         res(i) = NaN;
     % skip points with low Eeff, assign 0 activity and residual
@@ -101,9 +101,6 @@ parfor i=1:length(Hxx(:))
     % perform ID
     else
         % extract exp H, for point i
-        HExpi = HExp(:,:,i);
-        HExpi = HExpi';
-        HExpi = HExpi(:);
         
         % minimization, constraining activities to be positive
         if options.posConstr
@@ -113,10 +110,10 @@ parfor i=1:length(Hxx(:))
             
             % define the constraints: || H^exp - H^their || < H_thresh
             % (see documentation of coneprog for clarifications)
-            socContraints = secondordercone(A,HExpi,gamma0,-1*options.threshResidual);
+            socContraints = @(x) secondordercone(A,HExpi,options.threshResidual, x);
             
-            % run coneprog (see documentation of coneprog for clarifications)
-            [x,f,flag] = coneprog(ones(size(gamma0)),socContraints,[],[],[],[],gamma0,[],coneprogoptions);
+            % run fmincon (instead of coneprog)
+            [x,f,flag] = fmincon(@sum,socContraints,[],[],[],[],gamma0,[],fminconoption);
         else
             % minimization, not constraining activities to be positive (by
             % minimizing sum of absolute values, in an indirect way, by
@@ -131,32 +128,29 @@ parfor i=1:length(Hxx(:))
             A2 = [A -1*A];
             
             % define the constraints: || H^exp - H^their || < H_thresh
-            % (see documentation of coneprog for clarifications)
-            socContraints = secondordercone(A2,HExpi,gamma0,-1*options.threshResidual);
+            % Use own constraint function
+            socContraints = @(x) secondordercone(A2,HExpi,options.threshResidual, x);
             
-            % run coneprog (see documentation of coneprog for clarifications)
-            [x,f,flag] = coneprog(ones(size(gamma0)),socContraints,[],[],[],[],gamma0,[],coneprogoptions);
+            % run fmincon, instead of coneprog
+            [x,f,flag] = fmincon(@sum,gamma0,[], [], [], [], gamma0,[], socContraints, fminconoption);
             
             % recombine the slip activities, by substracting the "negative
             % slip system amplitudes", from the amplitudes of their
             % positive counterpart
-            if flag == 1
-                x = x(1:N) - x(N+1:end);
-            end
+            x = abs(x(1:N) - x(N+1:end));
         end
         
         % check the solution. if no good flag, put in a NaN
-        if flag == 1
+
+        if flag >= 0
             gamma(:,i) = x;
             fobj(i) = f;
         else
             gamma(:,i) = NaN;
             fobj(i) = NaN;
-        end
-        
+        end        
         % calculate residual 
         res(i) = norm(A*gamma(:,i)-HExpi);
-
         WaitMessage.Send;
     end
     
