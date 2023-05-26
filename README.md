@@ -2,6 +2,11 @@
 
 ![SSLIP](https://ars.els-cdn.com/content/image/1-s2.0-S1359645422008795-ga1_lrg.jpg)
 
+## Notice: About this fork
+**This version has been forked from https://github.com/Tijmenvermeij/SSLIP.**
+
+**It is intended to work on older MATLAB version (2018a or earlier).**
+
 # Introduction to SSLIP
 
 Slip System based Identification of Local Plasticity (**SSLIP**) is a methodology for automatic, point-by-point, identification of crystallographic slip system activity fields, performed by matching of Digital Image Correlation (DIC) displacement gradient fields to combinations of theoretical slip systems (resulting from e.g. EBSD). More details can be found in [**this paper**](https://doi.org/10.1016/j.actamat.2022.118502).
