@@ -5,7 +5,7 @@
 ## Notice: About this fork
 **This version has been forked from https://github.com/Tijmenvermeij/SSLIP.**
 
-**It is intended to work on older MATLAB version (2018a or earlier).**
+**It is intended to work on older MATLAB versions (2018a or earlier).**
 
 # Introduction to SSLIP
 
